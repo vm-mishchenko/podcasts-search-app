@@ -1,0 +1,12 @@
+{
+  "name": "extract_feed",
+  "version": "1.0.0",
+  "scripts": {
+  },
+  "dependencies": {
+    "rss-parser": "3.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0"
+  }
+}

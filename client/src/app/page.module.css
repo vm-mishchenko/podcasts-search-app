@@ -1,0 +1,23 @@
+.main {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    min-height: 100vh;
+    max-width: var(--max-width);
+    position: relative;
+}
+
+.header {
+    position: relative;
+    margin-bottom: 32px;
+}
+
+.searchInput input {
+    padding-left: 36px;
+}
+
+.loadingDot {
+    position: absolute;
+    top: 19px;
+    left: 14px;
+}

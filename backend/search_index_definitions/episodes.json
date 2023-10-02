@@ -1,0 +1,22 @@
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "derived_summary": {
+        "analyzer": "lucene.english",
+        "searchAnalyzer": "lucene.english",
+        "type": "string"
+      },
+      "derived_transcription_text": {
+        "analyzer": "lucene.english",
+        "searchAnalyzer": "lucene.english",
+        "type": "string"
+      },
+      "title": {
+        "analyzer": "lucene.english",
+        "searchAnalyzer": "lucene.english",
+        "type": "string"
+      }
+    }
+  }
+}

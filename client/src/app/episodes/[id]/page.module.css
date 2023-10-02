@@ -1,0 +1,8 @@
+.main {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    min-height: 100vh;
+    max-width: var(--max-width);
+    position: relative;
+}

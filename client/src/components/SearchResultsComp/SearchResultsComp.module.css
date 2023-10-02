@@ -1,0 +1,9 @@
+.wrapper {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.searchResult {
+    margin-bottom: 16px;
+}

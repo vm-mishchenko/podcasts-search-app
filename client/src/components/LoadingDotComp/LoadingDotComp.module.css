@@ -1,0 +1,13 @@
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.loaded {
+  background: #00A35C;
+}
+
+.loading {
+  background: #FFC010;
+}

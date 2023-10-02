@@ -1,0 +1,27 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "13.4.19",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "mongodb": "6.0.0",
+    "@leafygreen-ui/text-input": "12.1.22",
+    "@leafygreen-ui/button": "21.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "20.5.7",
+    "@types/react": "18.2.21",
+    "@types/react-dom": "18.2.7",
+    "@types/mongodb": "4.0.7",
+    "eslint": "8.48.0",
+    "eslint-config-next": "13.4.19",
+    "typescript": "5.2.2"
+  }
+}
