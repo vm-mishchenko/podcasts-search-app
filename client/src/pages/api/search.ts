@@ -20,12 +20,31 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
     const episodes = client.db('online').collection('episodes');
     const mongodbEpisodesResults = await episodes.aggregate([
         {
-            $search: {
-                index: "default",
-                // text: https://www.mongodb.com/docs/atlas/atlas-search/text/
-                text: {
-                    query: searchQuery,
-                    "path": ["title", "derived_summary"]
+            "$search": {
+                "compound": {
+                    "should": [
+                        {
+                            // text: https://www.mongodb.com/docs/atlas/atlas-search/text/
+                            "text": {
+                                "query": searchQuery,
+                                "path": "title",
+                                "score": {"boost": {"value": 3}}
+                            }
+                        },
+                        {
+                            "text": {
+                                "query": searchQuery,
+                                "path": "derived_summary",
+                                "score": {"boost": {"value": 2}}
+                            }
+                        },
+                        {
+                            "text": {
+                                "query": searchQuery,
+                                "path": "derived_transcription_text"
+                            }
+                        }
+                    ]
                 }
             }
         },
