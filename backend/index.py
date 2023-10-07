@@ -11,6 +11,8 @@ from pymongo import MongoClient
 from config import MONGODB_CLUSTER, MONGODB_USER, MONGODB_PASSWORD, WHISPER_ADMIN_ACCESS_TOKEN
 from episode_processors.summarization.summarization import summarize
 
+from podcasts.practicalai.practicalai_source import get_episodes as practicalai_get_episodes, \
+    get_podcast as practicalai_get_podcast
 from podcasts.changelog.changelog_source import get_episodes as changelog_get_episodes, \
     get_podcast as changelog_get_podcast
 from podcasts.mongodb.mongodb_source import get_episodes as mongodb_get_episodes, get_podcast as mongodb_get_podcast
@@ -29,6 +31,8 @@ podcasts = [
     (changelog_get_podcast, changelog_get_episodes),
     # Process Recommender systems experts
     (recommender_systems_experts_get_podcast, recommender_systems_experts_get_episodes),
+    # Practical AI
+    (practicalai_get_podcast, practicalai_get_episodes),
 ]
 
 # Configure Mongodb connection
