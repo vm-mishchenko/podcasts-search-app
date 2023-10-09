@@ -11,6 +11,8 @@ from pymongo import MongoClient
 from config import MONGODB_CLUSTER, MONGODB_USER, MONGODB_PASSWORD, WHISPER_ADMIN_ACCESS_TOKEN
 from episode_processors.summarization.summarization import summarize
 
+from podcasts.you_are_not_so_smart.you_are_not_so_smart_source import get_episodes as you_are_not_so_smart_get_episodes, \
+    get_podcast as you_are_not_so_smart_get_podcast
 from podcasts.practicalai.practicalai_source import get_episodes as practicalai_get_episodes, \
     get_podcast as practicalai_get_podcast
 from podcasts.changelog.changelog_source import get_episodes as changelog_get_episodes, \
@@ -23,16 +25,18 @@ from podcasts.software_engineering.software_engineering_source import get_episod
 
 # List of podcasts to process
 podcasts = [
+    # Process Changelog
+    (changelog_get_podcast, changelog_get_episodes),
     # Mongodb podcast
     (mongodb_get_podcast, mongodb_get_episodes),
     # Software engineering podcast
     (software_engineering_get_podcast, software_engineering_get_episodes),
-    # Process Changelog
-    (changelog_get_podcast, changelog_get_episodes),
     # Process Recommender systems experts
     (recommender_systems_experts_get_podcast, recommender_systems_experts_get_episodes),
     # Practical AI
     (practicalai_get_podcast, practicalai_get_episodes),
+    # You are not so smart
+    (you_are_not_so_smart_get_podcast, you_are_not_so_smart_get_episodes),
 ]
 
 # Configure Mongodb connection
@@ -156,7 +160,7 @@ for (get_podcast, get_episodes) in podcasts:
         episode_id = str(episode_insert_result.inserted_id)
 
         # Get processed episode
-        result = process_episode(episode, episode_id, podcast['_id'])
+        result = process_episode(episode, "test", podcast['_id'])
         processed_episode = result[0]
         transcription = result[1]
 
