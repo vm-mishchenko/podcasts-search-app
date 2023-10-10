@@ -22,7 +22,7 @@ export const searchEpisodes = async (searchQuery: string): Promise<EpisodeSearch
     // construct query parameters
     const searchParams = new URLSearchParams();
     searchParams.append('searchQuery', searchQuery.trim());
-    const url = `/api/search?${searchParams}`;
+    const url = `/api/search/episodes?${searchParams}`;
 
     // fetch data
     currentFetch = abortableFetch(url);

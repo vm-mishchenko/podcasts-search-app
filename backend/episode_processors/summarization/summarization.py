@@ -4,7 +4,7 @@ import pathlib
 from time import sleep
 from typing import Dict
 import openai
-from backend.config import OPEN_AI_API_KEY
+from backend.config import OPEN_AI_API_KEY, EPISODE_PROCESSOR_SKIP_CALL_OPEN_AI
 
 openai.api_key = OPEN_AI_API_KEY
 
@@ -14,10 +14,14 @@ def summarize(text: str, episode_id: str):
     cache = load_cache()
 
     if cache_key not in cache:
-        print("Miss summarization cache. Call openai to get summary.")
-        cache[cache_key] = _summarize_text(text)
-        save_cache(cache)
-        sleep(30)  # need to wait; openai imposes requests limit per minute
+        if EPISODE_PROCESSOR_SKIP_CALL_OPEN_AI:
+            print("Miss summarization cache. Return empty string.")
+            return ""
+        else:
+            print("Miss summarization cache. Call openai to get summary.")
+            cache[cache_key] = _summarize_text(text)
+            save_cache(cache)
+            sleep(30)  # need to wait; openai imposes requests limit per minute
 
     return cache[cache_key]
 

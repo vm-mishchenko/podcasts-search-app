@@ -1,0 +1,30 @@
+.root {
+    margin-bottom: 32px;
+}
+
+.header {
+    margin: 16px 0;
+}
+
+.transcriptionChunks {
+    padding: 0;
+}
+
+.transcriptionChunk {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 16px;
+}
+
+.chunkControl {
+    flex-shrink: 0;
+    margin-right: 24px;
+}
+
+.chunkTime {
+    margin: 0 0 8px 0;
+}
+
+.chunkText {
+    margin: 0 0 8px 0;
+}

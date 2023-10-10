@@ -14,6 +14,11 @@ MONGODB_PASSWORD = os.environ['MONGODB_PASSWORD']
 # Openai key to summarize transcription
 OPEN_AI_API_KEY = os.environ['OPEN_AI_API_KEY']
 
+if os.environ['EPISODE_PROCESSOR_SKIP_CALL_OPEN_AI'] == "True":
+    EPISODE_PROCESSOR_SKIP_CALL_OPEN_AI = True
+else:
+    EPISODE_PROCESSOR_SKIP_CALL_OPEN_AI = False
+
 # Whisper access token to schedule audio for transcription
 # https://github.com/vm-mishchenko/whisper-service
 WHISPER_ADMIN_ACCESS_TOKEN = os.environ['WHISPER_ADMIN_ACCESS_TOKEN']

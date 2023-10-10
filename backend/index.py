@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 import requests
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 from config import MONGODB_CLUSTER, MONGODB_USER, MONGODB_PASSWORD, WHISPER_ADMIN_ACCESS_TOKEN
 from episode_processors.summarization.summarization import summarize
@@ -58,9 +59,10 @@ def process_episode(episode: any, episode_id: str, podcast_id: str) -> Tuple[any
 
     # Get transcription
     transcription = get_transcription(episode)
-    for chunk in transcription:
-        chunk['podcast_id'] = podcast_id
-        chunk['episode_id'] = episode_id
+    for index, chunk in enumerate(transcription):
+        chunk['index'] = index
+        chunk['podcast_id'] = ObjectId(podcast_id)
+        chunk['episode_id'] = ObjectId(episode_id)
 
     # Get episode transcription as text
     text = get_transcription_as_text(transcription)
@@ -160,7 +162,7 @@ for (get_podcast, get_episodes) in podcasts:
         episode_id = str(episode_insert_result.inserted_id)
 
         # Get processed episode
-        result = process_episode(episode, "test", podcast['_id'])
+        result = process_episode(episode, episode_id, podcast['_id'])
         processed_episode = result[0]
         transcription = result[1]
 

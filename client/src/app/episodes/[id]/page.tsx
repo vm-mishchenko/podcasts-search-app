@@ -63,7 +63,7 @@ async function getEpisodeDetails(id: string): Promise<EpisodeDetails | undefined
         }
 
         const mongodbTranscription = await transcriptions.find({
-            'episode_id': id
+            'episode_id': new ObjectId(id)
         }, {
             sort: {
                 'start': 1
