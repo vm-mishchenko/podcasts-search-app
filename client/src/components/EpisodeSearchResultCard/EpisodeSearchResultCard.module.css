@@ -16,3 +16,9 @@
     display: block;
     margin-left: 8px;
 }
+
+.date {
+    font-size: 14px;
+    color: #525252;
+    margin-bottom: 4px;
+}

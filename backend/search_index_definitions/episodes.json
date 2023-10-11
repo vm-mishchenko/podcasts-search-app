@@ -12,11 +12,25 @@
         "searchAnalyzer": "lucene.english",
         "type": "string"
       },
-      "title": {
-        "analyzer": "lucene.english",
-        "searchAnalyzer": "lucene.english",
-        "type": "string"
-      }
+      "published_at": {
+        "type": "date"
+      },
+      "title": [
+        {
+          "analyzer": "lucene.english",
+          "multi": {
+            "title_standard": {
+              "type": "string"
+            }
+          },
+          "searchAnalyzer": "lucene.english",
+          "type": "string"
+        },
+        {
+          "analyzer": "lucene.english",
+          "type": "autocomplete"
+        }
+      ]
     }
   }
 }

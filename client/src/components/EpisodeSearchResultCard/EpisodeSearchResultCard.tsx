@@ -15,9 +15,23 @@ export const EpisodeSearchResultCard = ({searchQuery, episodeSearchResult}: Epis
     const toggleMore = () => {
         setShowMore(!showMore)
     }
+    
+    const publishedDate = new Date(episodeSearchResult.published_at);
+
     return <div>
         <div className={styles.header}>
-            <a href={`/episodes/${episodeSearchResult._id}`} target="_blank">{episodeSearchResult.title}</a>
+            <div>
+                <div className={styles.date}>
+                    {publishedDate.toLocaleDateString("en-US", {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    })}
+                </div>
+
+                <a href={`/episodes/${episodeSearchResult._id}`} target="_blank">{episodeSearchResult.title}</a>
+            </div>
+
             <button className={styles.showMoreBtn} onClick={toggleMore}>{showMore ? 'Less' : 'More'}</button>
         </div>
         {showMore && (

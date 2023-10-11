@@ -51,7 +51,10 @@ export default function Home() {
                 <LoadingDotComp className={styles.loadingDot} requestsInFlight={requestsInFlight}/>
             </div>
             <div>
-                <SearchResultsComp episodeSearchResults={episodeSearchResults} searchQuery={searchQuery}/>
+                {episodeSearchResults.length > 0 ?
+                    <SearchResultsComp episodeSearchResults={episodeSearchResults}
+                                       searchQuery={searchQuery}/> : "No results"}
+
             </div>
         </main>
     )

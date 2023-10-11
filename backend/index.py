@@ -4,6 +4,7 @@
 import datetime
 from time import sleep
 from typing import List, Tuple
+from dateutil import parser
 
 import requests
 from pymongo import MongoClient
@@ -56,6 +57,10 @@ transcriptions_collection = mongo_client[database]['transcriptions']
 
 def process_episode(episode: any, episode_id: str, podcast_id: str) -> Tuple[any, List[any]]:
     episode['podcast_id'] = podcast_id
+
+    # add date as datetime so MongoDB properly recognize it as date
+    published_at = parser.parse(episode['published_at'])
+    episode['published_at'] = published_at
 
     # Get transcription
     transcription = get_transcription(episode)

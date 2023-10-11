@@ -7,7 +7,7 @@ import {allowMethodsMiddleware} from "@/packages/middlewares/allow-methods.middl
 import {getMongoClient} from "@/packages/database/client";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchResult[]>) => {
-    const searchQuery = req.query['searchQuery'];
+    const searchQuery = req.query['searchQuery'] as string;
 
     if (!searchQuery) {
         res.status(HTTP_STATUS_CODE.OK);
@@ -18,24 +18,49 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
     // Fetch data from MongoDb
     const client = await getMongoClient();
     const episodes = client.db('online').collection('episodes');
-    const mongodbEpisodesResults = await episodes.aggregate([
+    const oneMonthInMilliseconds = 2592000000;
+    const aggregationPipeline: any = [
         {
             "$search": {
                 "compound": {
+                    "must": [],
                     "should": [
                         {
                             // text: https://www.mongodb.com/docs/atlas/atlas-search/text/
                             "text": {
                                 "query": searchQuery,
                                 "path": "title",
-                                "score": {"boost": {"value": 3}}
+                                "score": {
+                                    "boost": {
+                                        "value": 3
+                                    }
+                                }
+                            }
+                        },
+                        // boost newer episodes
+                        {
+                            // https://www.mongodb.com/docs/atlas/atlas-search/near
+                            'near': {
+                                'path': 'published_at',
+                                'origin': new Date(),
+                                // must be specified in milliseconds for date data type
+                                'pivot': oneMonthInMilliseconds * 12, // one year
+                                'score': {
+                                    'boost': {
+                                        'value': 4
+                                    }
+                                }
                             }
                         },
                         {
                             "text": {
                                 "query": searchQuery,
                                 "path": "derived_summary",
-                                "score": {"boost": {"value": 2}}
+                                "score": {
+                                    "boost": {
+                                        "value": 2
+                                    }
+                                }
                             }
                         },
                         {
@@ -53,17 +78,34 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
         },
         {
             $project: {
-                "title": 1
+                "title": 1,
+                "published_at": 1
             }
         }
-    ]).toArray();
+    ];
+
+    const exactMatchQuery = extractExactMatch(searchQuery);
+    if (exactMatchQuery) {
+        const mustClause = {
+            // text: https://www.mongodb.com/docs/atlas/atlas-search/phrase
+            "phrase": {
+                "query": exactMatchQuery,
+                "path": {"value": "title", "multi": "title_standard"}
+            }
+        };
+
+        aggregationPipeline[0]['$search']['compound']['must'].push(mustClause);
+    }
+
+    const mongodbEpisodesResults = await episodes.aggregate(aggregationPipeline).toArray();
 
     // Convert mongodb doc to response type
     const episodeSearchResults = mongodbEpisodesResults.map((mongodbEpisode) => {
         const episode: EpisodeSearchResult = {
             _id: mongodbEpisode._id,
             title: mongodbEpisode['title'],
-            derived_summary: mongodbEpisode['derived_summary']
+            published_at: mongodbEpisode['published_at'],
+            derived_summary: "" // no need for search result page at this moment
         };
 
         return episode;
@@ -72,5 +114,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
     res.status(HTTP_STATUS_CODE.OK);
     res.json(episodeSearchResults);
 };
+
+const extractExactMatch = (searchQuery: string): string | undefined => {
+    const split = searchQuery.split('"');
+
+    if (split.length >= 3) {
+        const exactMatchQuery = split[1].trim();
+        if (exactMatchQuery.length) {
+            return exactMatchQuery;
+        }
+    }
+}
 
 export default use(captureErrorsMiddleware, allowMethodsMiddleware([HTTP_METHOD.GET]), handler);
