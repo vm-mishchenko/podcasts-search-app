@@ -56,7 +56,7 @@ transcriptions_collection = mongo_client[database]['transcriptions']
 
 
 def process_episode(episode: any, episode_id: str, podcast_id: str) -> Tuple[any, List[any]]:
-    episode['podcast_id'] = podcast_id
+    episode['podcast_id'] = ObjectId(podcast_id)
 
     # add date as datetime so MongoDB properly recognize it as date
     published_at = parser.parse(episode['published_at'])
