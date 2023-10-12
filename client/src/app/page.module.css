@@ -12,8 +12,12 @@
     margin-bottom: 32px;
 }
 
-.searchInput input {
+.searchInput {
     padding-left: 36px;
+    padding-right: 12px;
+    min-height: 52px;
+    width: 100%;
+    font-size: 18px;
 }
 
 .loadingDot {

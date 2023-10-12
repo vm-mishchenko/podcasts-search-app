@@ -5,21 +5,52 @@ import {captureErrorsMiddleware} from "@/packages/middlewares/capture-errors.mid
 import {use} from "@/packages/middleware/use";
 import {allowMethodsMiddleware} from "@/packages/middlewares/allow-methods.middleware";
 import {getMongoClient} from "@/packages/database/client";
+import {ObjectId} from "bson";
+import {FacetType, StringFacet, Facets, Operator, FacetsResults} from "@/packages/sdk/pipeline";
+import {FacetPipeline, FacetPipelineExecutor, Search} from "@/packages/sdk/sdk";
+import {StringFacetUI, SearchUI, FacetResultUI, BucketIdResolver} from "@/packages/sdk/sdk-ui";
 
-const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchResult[]>) => {
-    const searchQuery = req.query['searchQuery'] as string;
+// Set up Mongodb
+const client = getMongoClient();
+const episodes = client.db('online').collection('episodes');
+const podcasts = client.db('online').collection('podcasts');
 
-    if (!searchQuery) {
-        res.status(HTTP_STATUS_CODE.OK);
-        res.json([]);
-        return;
-    }
+// Set up search
+const searchUI = new SearchUI(new Search(episodes));
 
-    // Fetch data from MongoDb
-    const client = await getMongoClient();
-    const episodes = client.db('online').collection('episodes');
+// Define Facets
+const podcastIdFacet: StringFacetUI = {
+    type: FacetType.STRING,
+    name: "podcast_id_str",
+    path: 'podcast_id_str',
+    numBuckets: 3
+};
+
+const podcastsResolver: BucketIdResolver<any> = async (facetResult) => {
+    // Fetch podcasts
+    const podcastObjectIds = facetResult.buckets.map((bucket) => new ObjectId(bucket._id));
+    const podcastDocList = await podcasts.find({
+        _id: {
+            "$in": podcastObjectIds
+        }
+    }).toArray();
+
+    // map MongoDB doc to bucket doc
+    const bucketDocs = podcastDocList.map((podcastDoc) => {
+        const {_id, ...rest} = podcastDoc;
+        return {
+            _id: `${_id}`,
+            ...rest
+        }
+    });
+
+    return bucketDocs;
+}
+
+const buildSearchPipeline = (searchQuery: string): Array<Record<string, any>> => {
+    // base $search query
     const oneMonthInMilliseconds = 2592000000;
-    const aggregationPipeline: any = [
+    const searchPipeline: Array<Record<string, any>> = [
         {
             "$search": {
                 "compound": {
@@ -85,6 +116,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
         }
     ];
 
+    // rudiment query understanding
     const exactMatchQuery = extractExactMatch(searchQuery);
     if (exactMatchQuery) {
         const mustClause = {
@@ -95,26 +127,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
             }
         };
 
-        aggregationPipeline[0]['$search']['compound']['must'].push(mustClause);
+        searchPipeline[0]['$search']['compound']['must'].push(mustClause);
     }
 
-    const mongodbEpisodesResults = await episodes.aggregate(aggregationPipeline).toArray();
-
-    // Convert mongodb doc to response type
-    const episodeSearchResults = mongodbEpisodesResults.map((mongodbEpisode) => {
-        const episode: EpisodeSearchResult = {
-            _id: mongodbEpisode._id,
-            title: mongodbEpisode['title'],
-            published_at: mongodbEpisode['published_at'],
-            derived_summary: mongodbEpisode['derived_summary'] // no need for search result page at this moment
-        };
-
-        return episode;
-    })
-
-    res.status(HTTP_STATUS_CODE.OK);
-    res.json(episodeSearchResults);
-};
+    return searchPipeline;
+}
 
 const extractExactMatch = (searchQuery: string): string | undefined => {
     const split = searchQuery.split('"');
@@ -126,5 +143,52 @@ const extractExactMatch = (searchQuery: string): string | undefined => {
         }
     }
 }
+
+export interface EpisodeSearchResponse {
+    facetResults: FacetResultUI[];
+    searchResults: EpisodeSearchResult[];
+}
+
+const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchResponse>) => {
+    const searchQuery = req.query['searchQuery'] as string;
+
+    if (!searchQuery) {
+        res.status(HTTP_STATUS_CODE.OK);
+        res.json({
+            searchResults: [],
+            facetResults: []
+        });
+        return;
+    }
+
+    // Fetch search and facets
+    const searchPipeline = buildSearchPipeline(searchQuery);
+    const facetOperator: Operator = searchPipeline[0]['$search'];
+    const [mongodbEpisodesResults, facetResults] = await Promise.all([
+        episodes.aggregate(searchPipeline).toArray(),
+        searchUI.facets(facetOperator, [podcastIdFacet], {
+            bucketIdResolver: podcastsResolver
+        })
+    ]);
+
+    // Map results to public views
+    const searchResults = mongodbEpisodesResults.map((mongodbEpisode) => {
+        const episode: EpisodeSearchResult = {
+            _id: mongodbEpisode._id,
+            title: mongodbEpisode['title'],
+            published_at: mongodbEpisode['published_at'],
+            derived_summary: mongodbEpisode['derived_summary']
+        };
+
+        return episode;
+    });
+    const {facets} = facetResults;
+
+    res.status(HTTP_STATUS_CODE.OK);
+    res.json({
+        searchResults: searchResults,
+        facetResults: facets,
+    });
+};
 
 export default use(captureErrorsMiddleware, allowMethodsMiddleware([HTTP_METHOD.GET]), handler);

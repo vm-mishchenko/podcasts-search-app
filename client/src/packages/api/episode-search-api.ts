@@ -1,5 +1,5 @@
-import {EpisodeSearchResult} from "@/packages/episode-search/episode-search-result.type";
 import {fetchWrapper} from "@/packages/fetch-wrapper/fetch-wrapper";
+import {EpisodeSearchResponse} from "@/pages/api/search/episodes";
 
 let currentFetch: any;
 const abortableFetch = (url: string) => {
@@ -8,11 +8,11 @@ const abortableFetch = (url: string) => {
 
     return {
         abort: () => controller.abort(),
-        ready: fetchWrapper<EpisodeSearchResult[]>(url, {signal})
+        ready: fetchWrapper<EpisodeSearchResponse>(url, {signal})
     };
 };
 
-export const searchEpisodes = async (searchQuery: string): Promise<EpisodeSearchResult[]> => {
+export const searchEpisodes = async (searchQuery: string): Promise<EpisodeSearchResponse> => {
     // abort previous in-flight request
     if (!!currentFetch) {
         currentFetch.abort();

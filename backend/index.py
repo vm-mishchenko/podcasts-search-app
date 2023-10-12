@@ -56,6 +56,9 @@ transcriptions_collection = mongo_client[database]['transcriptions']
 
 
 def process_episode(episode: any, episode_id: str, podcast_id: str) -> Tuple[any, List[any]]:
+    # save podcast id as string for faceting. So far Atlas support only string, number, and date types for faceting
+    # https://feedback.mongodb.com/forums/924868-atlas-search/suggestions/46033153-support-objectid-as-a-datatype-for-search-facets
+    episode['podcast_id_str'] = podcast_id
     episode['podcast_id'] = ObjectId(podcast_id)
 
     # add date as datetime so MongoDB properly recognize it as date

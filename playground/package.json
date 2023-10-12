@@ -1,0 +1,16 @@
+{
+  "name": "playground",
+  "scripts": {
+    "start": "npm run build && node dist/facet.playground.js",
+    "build": "npm run _clean && npm run _compile",
+    "_compile": "tsc -p tsconfig.json",
+    "_clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "mongodb": "6.1.0",
+    "dotenv": "16.3.1"
+  },
+  "devDependencies": {
+    "typescript": "5.2.2"
+  }
+}

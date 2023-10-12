@@ -16,56 +16,32 @@ episodes = db['episodes']
 # Send search request
 pipeline = [
     {
-        "$search": {
-            "compound": {
-                "must": [
-                    {
-                        "near": {
-                            "path": "published_at",
-                            "origin": datetime.datetime.now(),
-                            "pivot": 2592000000 * 3,  # one month
-                            'score': {
-                                'boost': {
-                                    'value': 40
+        # https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/#-searchmeta
+        "$searchMeta": {
+            "facet": {
+                "operator": {
+                    "compound": {
+                        "should": [
+                            {
+                                "text": {
+                                    "query": "year",
+                                    "path": "title"
                                 }
                             }
-                        },
-                    },
-                ],
-                "should": [
-                    {
-                        "text": {
-                            "query": "about",
-                            "path": "title"
-                        }
+                        ]
                     }
-                ]
-            }
-        }
-    },
-    {
-        "$limit": 5
-    },
-    {
-        "$project": {
-            "_id": -1,
-            "title": 1,
-            "published_at": 1,
-            "score": {
-                "$meta": "searchScore"
+                },
+                "facets": {
+                    "podcastIdsFacet": {
+                        "type": "string",
+                        "path": "podcast_id_str"
+                    }
+                }
             }
         }
     }
 ]
 
 results = list(episodes.aggregate(pipeline))
-explain_result = db.command('aggregate', 'episodes', pipeline=pipeline, explain=True)
 
-
-def print_results(results):
-    for doc in results:
-        print(f"{doc['published_at']} {doc['title']} | {doc['score']}")
-
-
-print_results(results)
-print(explain_result)
+print(results)

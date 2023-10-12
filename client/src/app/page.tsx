@@ -6,11 +6,14 @@ import {LoadingDotComp} from "@/components/LoadingDotComp/LoadingDotComp";
 import {SearchResultsComp} from "@/components/SearchResultsComp/SearchResultsComp";
 import {EpisodeSearchResult} from "@/packages/episode-search/episode-search-result.type";
 import {searchEpisodes} from "@/packages/api/episode-search-api";
+import {FacetResultUI} from "@/packages/sdk/sdk-ui";
+import {StringFacet} from "@/packages/sdk/components/StringFacet/StringFacet";
 
 export default function Home() {
     const [searchQuery, setSearchQuery] = useState('');
     const [requestsInFlight, setRequestsInFlight] = useState(0);
     const [episodeSearchResults, setEpisodeSearchResults] = useState<EpisodeSearchResult[]>([])
+    const [facetResults, setFacetResults] = useState<FacetResultUI[]>([])
 
     const onSearchQueryChange = (newSearchQuery: string) => {
         setSearchQuery(newSearchQuery);
@@ -21,8 +24,9 @@ export default function Home() {
         setRequestsInFlight((currentFlights) => {
             return currentFlights + 1;
         });
-        searchEpisodes(searchQuery).then((episodeSearchResults) => {
-            setEpisodeSearchResults(episodeSearchResults);
+        searchEpisodes(searchQuery).then((response) => {
+            setFacetResults(response.facetResults);
+            setEpisodeSearchResults(response.searchResults);
         }).catch((error: any) => {
             console.error(error)
         }).finally(() => {
@@ -35,10 +39,9 @@ export default function Home() {
     return (
         <main className={styles.main}>
             <div className={styles.header}>
-                <TextInput
-                    label={''}
+                <input
                     placeholder={'Search'}
-                    sizeVariant="large"
+                    aria-label="Search"
                     onChange={(event) => {
                         onSearchQueryChange(event.target.value);
                     }}
@@ -51,11 +54,16 @@ export default function Home() {
                 <LoadingDotComp className={styles.loadingDot} requestsInFlight={requestsInFlight}/>
             </div>
             <div>
+                {facetResults.map((facetResult) => {
+                    return <StringFacet facetResult={facetResult}/>
+                })}
+            </div>
+            <div>
                 {episodeSearchResults.length > 0 ?
                     <SearchResultsComp episodeSearchResults={episodeSearchResults}
                                        searchQuery={searchQuery}/> : "No results"}
-
             </div>
+
         </main>
     )
 }
