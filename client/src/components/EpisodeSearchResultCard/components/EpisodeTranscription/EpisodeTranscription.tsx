@@ -43,7 +43,7 @@ export const EpisodeTranscription = ({searchQuery, episode_id}: EpisodeTranscrip
             console.error(error)
         }).finally(() => {
         });
-    }, [searchQuery]);
+    }, []);
 
     return <div className={styles.root}>
         <h4 className={styles.header}>Transcription</h4>

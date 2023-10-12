@@ -46,7 +46,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<TranscriptionSe
             }
         },
         {
-            "$limit": 5
+            "$limit": 3
         },
         {
             '$sort': {

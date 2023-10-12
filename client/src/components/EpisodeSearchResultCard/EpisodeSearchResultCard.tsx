@@ -1,9 +1,10 @@
 import {EpisodeSearchResult} from "@/packages/episode-search/episode-search-result.type";
 import styles from './EpisodeSearchResultCard.module.css';
-import {useState} from "react";
+import React, {useState} from "react";
 import {
     EpisodeTranscription
 } from "@/components/EpisodeSearchResultCard/components/EpisodeTranscription/EpisodeTranscription";
+import {EpisodeSummary} from "@/components/EpisodeSearchResultCard/components/EpisodeSummary/EpisodeSummary";
 
 export interface EpisodeSearchResultProps {
     searchQuery: string;
@@ -15,7 +16,7 @@ export const EpisodeSearchResultCard = ({searchQuery, episodeSearchResult}: Epis
     const toggleMore = () => {
         setShowMore(!showMore)
     }
-    
+
     const publishedDate = new Date(episodeSearchResult.published_at);
 
     return <div>
@@ -31,11 +32,17 @@ export const EpisodeSearchResultCard = ({searchQuery, episodeSearchResult}: Epis
 
                 <a href={`/episodes/${episodeSearchResult._id}`} target="_blank">{episodeSearchResult.title}</a>
             </div>
-
-            <button className={styles.showMoreBtn} onClick={toggleMore}>{showMore ? 'Less' : 'More'}</button>
+            <div>
+                <div className={styles.showMoreBtnMargin}></div>
+                <button className={styles.showMoreBtn} onClick={toggleMore}>{showMore ? 'Less' : 'More'}</button>
+            </div>
         </div>
         {showMore && (
             <div>
+                {episodeSearchResult.derived_summary && (
+                    <EpisodeSummary episodeSummary={episodeSearchResult.derived_summary}/>
+                )}
+
                 <EpisodeTranscription searchQuery={searchQuery} episode_id={episodeSearchResult._id}/>
             </div>
         )}

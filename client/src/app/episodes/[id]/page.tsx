@@ -26,11 +26,20 @@ export default async function Page({params: {id}}: { params: { id: string } }) {
                 <a target="_blank" href={episode.episode_link}>Episode link</a>
             </p>
 
-            <p>Published at: {episode.published_at}</p>
-            <div>
-                <h3>Summary</h3>
-                <p>{episode.derived_summary}</p>
-            </div>
+            <p>
+                Published at: {episode.published_at.toLocaleDateString("en-US", {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            })}
+            </p>
+
+            {episode.derived_summary && (
+                <div>
+                    <h3>Summary</h3>
+                    <p>{episode.derived_summary}</p>
+                </div>
+            )}
 
             <div>
                 <h3>Transcription</h3>

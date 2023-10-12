@@ -79,7 +79,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
         {
             $project: {
                 "title": 1,
-                "published_at": 1
+                "published_at": 1,
+                "derived_summary": 1
             }
         }
     ];
@@ -105,7 +106,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
             _id: mongodbEpisode._id,
             title: mongodbEpisode['title'],
             published_at: mongodbEpisode['published_at'],
-            derived_summary: "" // no need for search result page at this moment
+            derived_summary: mongodbEpisode['derived_summary'] // no need for search result page at this moment
         };
 
         return episode;
