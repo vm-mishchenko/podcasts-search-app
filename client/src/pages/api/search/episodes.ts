@@ -6,9 +6,21 @@ import {use} from "@/packages/middleware/use";
 import {allowMethodsMiddleware} from "@/packages/middlewares/allow-methods.middleware";
 import {getMongoClient} from "@/packages/database/client";
 import {ObjectId} from "bson";
-import {FacetType, StringFacet, Facets, Operator, FacetsResults} from "@/packages/sdk/pipeline";
-import {FacetPipeline, FacetPipelineExecutor, Search} from "@/packages/sdk/sdk";
-import {StringFacetUI, SearchUI, FacetResultUI, BucketIdResolver} from "@/packages/sdk/sdk-ui";
+import {FacetType, Operator} from "@/packages/sdk/mongodb/search-meta/search-meta.types";
+import {Search} from "@/packages/sdk/sdk";
+import {BucketIdResolver, StringFacetUI, FacetResultUI} from "@/packages/sdk/ui/sdk-ui-facets";
+import {
+    TextOperator,
+    CompoundOperator,
+    SearchStage,
+    NearOperator,
+    PhraseOperator,
+    SearchOperator
+} from "@/packages/sdk/mongodb/search/search.types";
+import {BaseSearchPipeline} from "@/packages/sdk/mongodb/search/search";
+import {SearchUI} from "@/packages/sdk/ui/sdk-ui";
+import {Filter, FilterType, filterTypeKeys} from "@/packages/filters/filters.type";
+import {mapToSearchOperator, PublishedAtFilter} from "@/packages/filters/published-at.filter";
 
 // Set up Mongodb
 const client = getMongoClient();
@@ -16,7 +28,8 @@ const episodes = client.db('online').collection('episodes');
 const podcasts = client.db('online').collection('podcasts');
 
 // Set up search
-const searchUI = new SearchUI(new Search(episodes));
+const search = new Search(episodes);
+const searchUI = new SearchUI(search);
 
 // Define Facets
 const podcastIdFacet: StringFacetUI = {
@@ -47,92 +60,7 @@ const podcastsResolver: BucketIdResolver<any> = async (facetResult) => {
     return bucketDocs;
 }
 
-const buildSearchPipeline = (searchQuery: string): Array<Record<string, any>> => {
-    // base $search query
-    const oneMonthInMilliseconds = 2592000000;
-    const searchPipeline: Array<Record<string, any>> = [
-        {
-            "$search": {
-                "compound": {
-                    "must": [],
-                    "should": [
-                        {
-                            // text: https://www.mongodb.com/docs/atlas/atlas-search/text/
-                            "text": {
-                                "query": searchQuery,
-                                "path": "title",
-                                "score": {
-                                    "boost": {
-                                        "value": 3
-                                    }
-                                }
-                            }
-                        },
-                        // boost newer episodes
-                        {
-                            // https://www.mongodb.com/docs/atlas/atlas-search/near
-                            'near': {
-                                'path': 'published_at',
-                                'origin': new Date(),
-                                // must be specified in milliseconds for date data type
-                                'pivot': oneMonthInMilliseconds * 12, // one year
-                                'score': {
-                                    'boost': {
-                                        'value': 4
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "text": {
-                                "query": searchQuery,
-                                "path": "derived_summary",
-                                "score": {
-                                    "boost": {
-                                        "value": 2
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "text": {
-                                "query": searchQuery,
-                                "path": "derived_transcription_text"
-                            }
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            $limit: 20
-        },
-        {
-            $project: {
-                "title": 1,
-                "published_at": 1,
-                "derived_summary": 1
-            }
-        }
-    ];
-
-    // rudiment query understanding
-    const exactMatchQuery = extractExactMatch(searchQuery);
-    if (exactMatchQuery) {
-        const mustClause = {
-            // text: https://www.mongodb.com/docs/atlas/atlas-search/phrase
-            "phrase": {
-                "query": exactMatchQuery,
-                "path": {"value": "title", "multi": "title_standard"}
-            }
-        };
-
-        searchPipeline[0]['$search']['compound']['must'].push(mustClause);
-    }
-
-    return searchPipeline;
-}
-
+// Configure Search pipeline
 const extractExactMatch = (searchQuery: string): string | undefined => {
     const split = searchQuery.split('"');
 
@@ -144,6 +72,71 @@ const extractExactMatch = (searchQuery: string): string | undefined => {
     }
 }
 
+const searchPipelineBuilder = (searchQuery: string, filters: Filter[]) => {
+    const oneMonthInMilliseconds = 2592000000;
+
+    // Configure Search operators
+    const title = new TextOperator(searchQuery, 'title', 3);
+    const derivedSummary = new TextOperator(searchQuery, 'derived_summary', 2);
+    const derivedTranscriptionText = new TextOperator(searchQuery, 'derived_transcription_text');
+    const nearOperator = new NearOperator('published_at', new Date(), oneMonthInMilliseconds * 12, 4);
+
+    // exact match
+    const must = [];
+    const exactMatchQuery = extractExactMatch(searchQuery);
+    if (exactMatchQuery) {
+        const phraseOperator = new PhraseOperator(
+            exactMatchQuery,
+            'title',
+            'title_standard'
+        );
+        must.push(phraseOperator);
+    }
+
+    // Configure filter operators
+    const filterSearchOperators = mapFilterToSearchOperator(filters);
+
+    const compound = new CompoundOperator({
+        should: [
+            title,
+            nearOperator,
+            derivedSummary,
+            derivedTranscriptionText
+        ],
+        filter: filterSearchOperators,
+        must
+    });
+
+    const searchStage: SearchStage = {
+        index: 'default',
+        operator: compound
+    };
+
+    const baseSearchPipeline = new BaseSearchPipeline(searchStage, 40, [
+        'title',
+        'published_at',
+        'derived_summary',
+        'derived_transcription_text'
+    ]);
+    return baseSearchPipeline;
+}
+
+const mapFilterToSearchOperator = (filters: Filter[]): SearchOperator[] => {
+    const searchOperators = filters.filter((filter) => {
+        return filterTypeKeys.includes(filter.type);
+    }).map((filter) => {
+        switch (filter.type) {
+            case FilterType.PUBLISHED_AT:
+                return mapToSearchOperator(filter as PublishedAtFilter);
+            default:
+                // should not happen in theory as we filter out unknown filters before
+                throw new Error(`Unsupported filter type: "${filter.type}"`);
+        }
+    });
+
+    return searchOperators;
+}
+
 export interface EpisodeSearchResponse {
     facetResults: FacetResultUI[];
     searchResults: EpisodeSearchResult[];
@@ -151,6 +144,7 @@ export interface EpisodeSearchResponse {
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchResponse>) => {
     const searchQuery = req.query['searchQuery'] as string;
+    const rawFilters = req.query['filters'] as string;
 
     if (!searchQuery) {
         res.status(HTTP_STATUS_CODE.OK);
@@ -161,11 +155,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
         return;
     }
 
+    let filters: Filter[];
+    try {
+        filters = JSON.parse(rawFilters);
+    } catch (e) {
+        filters = [];
+        console.error(`Cannot parse filters.`);
+    }
+
     // Fetch search and facets
-    const searchPipeline = buildSearchPipeline(searchQuery);
-    const facetOperator: Operator = searchPipeline[0]['$search'];
+    const searchPipeline = searchPipelineBuilder(searchQuery, filters);
+    const facetOperator: Operator = searchPipeline.getSearchStage();
     const [mongodbEpisodesResults, facetResults] = await Promise.all([
-        episodes.aggregate(searchPipeline).toArray(),
+        search.search(searchPipeline),
         searchUI.facets(facetOperator, [podcastIdFacet], {
             bucketIdResolver: podcastsResolver
         })

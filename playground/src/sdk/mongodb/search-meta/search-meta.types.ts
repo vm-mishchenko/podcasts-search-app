@@ -1,5 +1,5 @@
 /**
- * Types mimics the real response from the  $searchMeta definition and result.
+ * Types mimics the real response from the $searchMeta definition and result.
  */
 
 export enum FacetType {

@@ -1,8 +1,9 @@
 import {MongoClient, ObjectId} from "mongodb";
 import {config} from "../config";
-import {FacetType, Operator} from "../sdk/pipeline";
 import {Search} from "../sdk/sdk";
-import {SearchUI, StringFacetUI, BucketIdResolver} from "../sdk/sdk-ui";
+import {BucketIdResolver, StringFacetUI} from "../sdk/ui/sdk-ui-facets";
+import {FacetType, Operator} from "../sdk/mongodb/search-meta/search-meta.types";
+import {SearchUI} from "../sdk/ui/sdk-ui";
 
 // Configure MongoDB
 const client = new MongoClient(`mongodb+srv://${config.MONGODB_USER}:${config.MONGODB_PASSWORD}@${config.MONGODB_CLUSTER}/?retryWrites=true&w=majority`);

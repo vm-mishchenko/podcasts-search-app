@@ -9,6 +9,10 @@
 
 .header {
     position: relative;
+    margin-bottom: 16px;
+}
+
+.filters {
     margin-bottom: 32px;
 }
 
@@ -24,4 +28,12 @@
     position: absolute;
     top: 19px;
     left: 14px;
+}
+
+.resetBtn {
+    position: absolute;
+    top: 12px;
+    right: 10px;
+    height: 30px;
+    width: 54px;
 }

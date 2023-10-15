@@ -1,15 +1,13 @@
-import {Search, FacetPipeline} from "./sdk";
+import {Search} from "../sdk";
+import {FacetName, Operator, Facets} from "../mongodb/search-meta/search-meta.types";
 import {
-    FacetName,
-    BucketId,
-    FacetResult,
-    NumberFacet,
-    StringFacet,
-    Operator,
-    Facets,
-    FacetsResults,
-    FacetDefinition
-} from "./pipeline";
+    FacetDefinitionUI,
+    SearchFacetOptions,
+    SearchFacetUIResult,
+    FacetResultUI,
+    defaultBucketIdResolver
+} from "./sdk-ui-facets";
+import {FacetPipeline} from "../mongodb/search-meta/search-meta";
 
 export class SearchUI {
     private readonly search: Search;
@@ -78,54 +76,3 @@ export class SearchUI {
         return {facets};
     }
 }
-
-export interface SearchFacetOptions {
-    selectedFacets?: SelectedFacet[];
-    bucketIdResolver?: BucketIdResolver<any>
-}
-
-const defaultBucketIdResolver: BucketIdResolver<any> = async (facetResult: FacetResult) => {
-    const bucketDocs = facetResult.buckets.map((bucket) => {
-        return {
-            _id: bucket._id
-        };
-    });
-    return bucketDocs;
-}
-
-export interface SearchFacetUIResult {
-    facets: FacetResultUI[]
-}
-
-// Client sends SelectedFacet back to server for search request.
-export interface SelectedFacet {
-    name: FacetName,
-    bucketIds: BucketId[]
-}
-
-// UI specific Facet definitions (better UX relative to MongoDB Facet types; no functional changes).
-export type FacetDefinitionUI = NumberFacetUI | StringFacetUI;
-
-// Number facet definition to build request to MongoDB.
-// todo-vm: don't extend - use composition instead
-export interface NumberFacetUI extends NumberFacet {
-    name: FacetName;
-}
-
-// String facet definition to build request to MongoDB.
-export interface StringFacetUI extends StringFacet {
-    name: FacetName; // Uniquely identifies facet to distinguish between different facets on the same field.
-}
-
-// Server sends FacetResultUI back as response for search request.
-export interface FacetResultUI {
-    facetResult: FacetResult;
-    facetDefinition: FacetDefinitionUI;
-    selectedBuketIds: BucketId[]
-    bucketDocs: Array<BucketDoc>
-}
-
-export interface BucketDoc extends Record<BucketId, any> {
-}
-
-export type BucketIdResolver<D extends BucketDoc> = (facetResult: FacetResult, facetDefinitionUI: FacetDefinitionUI) => Promise<D[]>;

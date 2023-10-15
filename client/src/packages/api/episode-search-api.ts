@@ -1,5 +1,6 @@
 import {fetchWrapper} from "@/packages/fetch-wrapper/fetch-wrapper";
 import {EpisodeSearchResponse} from "@/pages/api/search/episodes";
+import {Filter} from "@/packages/filters/filters.type";
 
 let currentFetch: any;
 const abortableFetch = (url: string) => {
@@ -12,7 +13,7 @@ const abortableFetch = (url: string) => {
     };
 };
 
-export const searchEpisodes = async (searchQuery: string): Promise<EpisodeSearchResponse> => {
+export const searchEpisodes = async (searchQuery: string, filters: Filter[]): Promise<EpisodeSearchResponse> => {
     // abort previous in-flight request
     if (!!currentFetch) {
         currentFetch.abort();
@@ -22,6 +23,7 @@ export const searchEpisodes = async (searchQuery: string): Promise<EpisodeSearch
     // construct query parameters
     const searchParams = new URLSearchParams();
     searchParams.append('searchQuery', searchQuery.trim());
+    searchParams.append('filters', JSON.stringify(filters));
     const url = `/api/search/episodes?${searchParams}`;
 
     // fetch data

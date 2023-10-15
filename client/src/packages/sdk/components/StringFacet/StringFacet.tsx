@@ -1,4 +1,4 @@
-import {FacetResultUI} from "@/packages/sdk/sdk-ui";
+import {FacetResultUI} from "@/packages/sdk/ui/sdk-ui-facets";
 
 export interface StringFacetProps {
     facetResult: FacetResultUI;
@@ -7,8 +7,8 @@ export interface StringFacetProps {
 export const StringFacet = ({facetResult}: StringFacetProps) => {
     return <div>
         <ul>
-            {facetResult.facetResult.buckets.map((bucket) => {
-                return <li>
+            {facetResult.facetResult.buckets.map((bucket, index) => {
+                return <li key={index}>
                     {bucket._id}
                 </li>
             })}

@@ -1,7 +1,7 @@
 {
   "name": "playground",
   "scripts": {
-    "start": "npm run build && node dist/facet.playground.js",
+    "start": "npm run build && node dist/playground.js",
     "build": "npm run _clean && npm run _compile",
     "_compile": "tsc -p tsconfig.json",
     "_clean": "rm -rf dist"
