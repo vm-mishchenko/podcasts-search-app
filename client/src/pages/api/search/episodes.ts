@@ -8,7 +8,7 @@ import {getMongoClient} from "@/packages/database/client";
 import {ObjectId} from "bson";
 import {FacetType, Operator} from "@/packages/sdk/mongodb/search-meta/search-meta.types";
 import {Search} from "@/packages/sdk/sdk";
-import {BucketIdResolver, StringFacetUI, FacetResultUI} from "@/packages/sdk/ui/sdk-ui-facets";
+import {BucketIdResolver, StringFacetUI, FacetResultUI, NumberFacetUI} from "@/packages/sdk/ui/sdk-ui-facets";
 import {
     TextOperator,
     CompoundOperator,
@@ -36,28 +36,40 @@ const podcastIdFacet: StringFacetUI = {
     type: FacetType.STRING,
     name: "podcast_id_str",
     path: 'podcast_id_str',
-    numBuckets: 3
+    numBuckets: 10
 };
 
-const podcastsResolver: BucketIdResolver<any> = async (facetResult) => {
-    // Fetch podcasts
-    const podcastObjectIds = facetResult.buckets.map((bucket) => new ObjectId(bucket._id));
-    const podcastDocList = await podcasts.find({
-        _id: {
-            "$in": podcastObjectIds
-        }
-    }).toArray();
+const durationCategoryFacet: NumberFacetUI = {
+    type: FacetType.NUMBER,
+    name: "duration_in_sec",
+    path: 'duration_in_sec',
+    boundaries: [0, 30 * 60, 60 * 60, 10000 * 60],
+    default: "more"
+};
 
-    // map MongoDB doc to bucket doc
-    const bucketDocs = podcastDocList.map((podcastDoc) => {
-        const {_id, ...rest} = podcastDoc;
-        return {
-            _id: `${_id}`,
-            ...rest
-        }
-    });
+const podcastsResolver: BucketIdResolver<any> = async (facetResult, facetDefinitionUI) => {
+    if (facetDefinitionUI.name === podcastIdFacet.name) {
+        // Fetch podcasts
+        const podcastObjectIds = facetResult.buckets.map((bucket) => new ObjectId(bucket._id));
+        const podcastDocList = await podcasts.find({
+            _id: {
+                "$in": podcastObjectIds
+            }
+        }).toArray();
 
-    return bucketDocs;
+        // map MongoDB doc to bucket doc
+        const bucketDocs = podcastDocList.map((podcastDoc) => {
+            const {_id, ...rest} = podcastDoc;
+            return {
+                _id: `${_id}`,
+                ...rest
+            }
+        });
+
+        return bucketDocs;
+    } else {
+        return [];
+    }
 }
 
 // Configure Search pipeline
@@ -73,16 +85,9 @@ const extractExactMatch = (searchQuery: string): string | undefined => {
 }
 
 const searchPipelineBuilder = (searchQuery: string, filters: Filter[]) => {
-    const oneMonthInMilliseconds = 2592000000;
-
-    // Configure Search operators
-    const title = new TextOperator(searchQuery, 'title', 3);
-    const derivedSummary = new TextOperator(searchQuery, 'derived_summary', 2);
-    const derivedTranscriptionText = new TextOperator(searchQuery, 'derived_transcription_text');
-    const nearOperator = new NearOperator('published_at', new Date(), oneMonthInMilliseconds * 12, 4);
-
-    // exact match
+    // Configure "must" operators
     const must = [];
+
     const exactMatchQuery = extractExactMatch(searchQuery);
     if (exactMatchQuery) {
         const phraseOperator = new PhraseOperator(
@@ -91,20 +96,30 @@ const searchPipelineBuilder = (searchQuery: string, filters: Filter[]) => {
             'title_standard'
         );
         must.push(phraseOperator);
+    } else {
+        const title = new TextOperator(searchQuery, 'title', 3);
+        const derivedSummary = new TextOperator(searchQuery, 'derived_summary', 2);
+        const derivedTranscriptionText = new TextOperator(searchQuery, 'derived_transcription_text');
+        must.push(...[
+            title,
+            derivedSummary,
+            derivedTranscriptionText
+        ]);
     }
+
+    // Configure "should" operators
+    const oneMonthInMilliseconds = 2592000000;
+    const nearOperator = new NearOperator('published_at', new Date(), oneMonthInMilliseconds * 12, 4);
 
     // Configure filter operators
     const filterSearchOperators = mapFilterToSearchOperator(filters);
 
     const compound = new CompoundOperator({
+        must,
         should: [
-            title,
-            nearOperator,
-            derivedSummary,
-            derivedTranscriptionText
+            nearOperator
         ],
         filter: filterSearchOperators,
-        must
     });
 
     const searchStage: SearchStage = {
@@ -168,7 +183,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<EpisodeSearchRe
     const facetOperator: Operator = searchPipeline.getSearchStage();
     const [mongodbEpisodesResults, facetResults] = await Promise.all([
         search.search(searchPipeline),
-        searchUI.facets(facetOperator, [podcastIdFacet], {
+        searchUI.facets(facetOperator, [podcastIdFacet, durationCategoryFacet], {
             bucketIdResolver: podcastsResolver
         })
     ]);

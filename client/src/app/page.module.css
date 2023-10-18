@@ -37,3 +37,23 @@
     height: 30px;
     width: 54px;
 }
+
+.content {
+    display: flex;
+}
+
+.facets {
+    flex-basis: 25%;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.searchResults {
+    flex-grow: 1;
+}
+
+@media screen and (max-width: 480px) {
+    .facets {
+        display: none;
+    }
+}

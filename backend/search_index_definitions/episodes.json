@@ -12,6 +12,14 @@
         "searchAnalyzer": "lucene.english",
         "type": "string"
       },
+      "duration_in_sec": [
+        {
+          "type": "numberFacet"
+        },
+        {
+          "type": "number"
+        }
+      ],
       "podcast_id_str": {
         "type": "stringFacet"
       },

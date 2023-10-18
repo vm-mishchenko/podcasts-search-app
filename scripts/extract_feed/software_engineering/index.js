@@ -3,27 +3,25 @@ const Parser = require('rss-parser');
 const parser = new Parser();
 const {EPISODE_FIELDS} = require('../episode.js');
 const axios = require('axios');
+const {filterRawEpisode, getDurationInSec} = require("../episode");
 
 (async () => {
     const fileXML = fs.readFileSync('./raw/231001_software_engineering.xml')
     const feed = await parser.parseString(fileXML);
 
-    const episodes = [];
-    feed.items.filter((item) => {
-        if(!item['enclosure'] || !item['enclosure']['url']) {
-            console.warn(`Episode has no audio URL. Skip it: ${item['title']}`);
-            return false;
-        }
-        return true;
-    }).forEach(rawEpisode => {
+    const required_fields = ['guid', 'title', 'enclosure.url', 'link', 'pubDate', 'itunes.duration'];
+    const episodes = feed.items.filter((rawEpisode) => {
+        return filterRawEpisode(rawEpisode, required_fields);
+    }).map(rawEpisode => {
         const episode = {
             [EPISODE_FIELDS.id]: rawEpisode['guid'],
             [EPISODE_FIELDS.title]: rawEpisode['title'],
             [EPISODE_FIELDS.audioUrl]: rawEpisode['enclosure']['url'],
             [EPISODE_FIELDS.episodeLink]: rawEpisode['link'],
             [EPISODE_FIELDS.publishedAt]: (new Date(rawEpisode['pubDate'])).toISOString(),
+            [EPISODE_FIELDS.durationInSec]: getDurationInSec(rawEpisode['itunes']['duration']),
         }
-        episodes.push(episode);
+        return episode;
     });
 
     // Schedule all episodes for transcription

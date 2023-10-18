@@ -1,5 +1,5 @@
 const fs = require('fs');
-const {EPISODE_FIELDS} = require('../episode.js');
+const {EPISODE_FIELDS, filterRawEpisode, getDurationInSec} = require('../episode.js');
 const axios = require('axios');
 
 const assertValue = (value, key) => {
@@ -12,36 +12,17 @@ const assertValue = (value, key) => {
 
 (async () => {
     const rawEpisodes = JSON.parse(fs.readFileSync('./raw/231005_changelog.json'))
-    const episodes = [];
-    const required_fields = ['guid', 'title', 'enclosure.url', 'link', 'pubDate'];
-    rawEpisodes.filter((rawEpisode) => {
-        const doesNotHaveRequiredFields = required_fields.some((fieldPath) => {
-            const fields = fieldPath.split('.'); // e.g. enclosure.url
-
-            const fieldValue = fields.reduce((item, fieldName,) => {
-                if (!item) {
-                    return item;
-                }
-
-                const nextValue = item[fieldName];
-                return nextValue;
-            }, rawEpisode);
-
-            if (!fieldValue) {
-                console.warn(`Skip episode that doesn't has required field: ${fieldPath}, name: ${rawEpisode['title']}`);
-                return true;
-            }
-
-            return false;
-        });
-        return !doesNotHaveRequiredFields;
-    }).forEach(rawEpisode => {
+    const required_fields = ['guid', 'title', 'enclosure.url', 'link', 'pubDate', 'itunes.duration'];
+    const episodes = rawEpisodes.filter((rawEpisode) => {
+        return filterRawEpisode(rawEpisode, required_fields);
+    }).map(rawEpisode => {
         const episode = {
             [EPISODE_FIELDS.id]: assertValue(rawEpisode['guid'], 'guid'),
             [EPISODE_FIELDS.title]: assertValue(rawEpisode['title'], 'title'),
             [EPISODE_FIELDS.audioUrl]: rawEpisode['enclosure']['url'],
             [EPISODE_FIELDS.episodeLink]: rawEpisode['link'],
             [EPISODE_FIELDS.publishedAt]: (new Date(rawEpisode['pubDate'])).toISOString(),
+            [EPISODE_FIELDS.durationInSec]: getDurationInSec(rawEpisode['itunes']['duration']),
         }
         episodes.push(episode);
     });

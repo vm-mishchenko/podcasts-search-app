@@ -74,16 +74,22 @@ export default function Home() {
                 <LoadingDotComp className={styles.loadingDot} requestsInFlight={requestsInFlight}/>
                 {showResetBtn && <button className={styles.resetBtn} onClick={onResetBtnClick}>Reset</button>}
             </div>
+
             <div className={styles.filters}>
                 <PublishedAtFilterComp value={publishedAtFilter} onChange={(selectedFilterValue) => {
                     setPublishedAtFilter(selectedFilterValue);
                 }}/>
             </div>
-            <div>
-                {episodeSearchResults.length > 0 ?
+
+            {episodeSearchResults.length > 0 ? <div className={styles.content}>
+                <div className={styles.facets}>
+                    Facets and filters
+                </div>
+                <div className={styles.searchResults}>
                     <SearchResultsComp episodeSearchResults={episodeSearchResults}
-                                       searchQuery={searchQuery}/> : "No results"}
-            </div>
+                                       searchQuery={searchQuery}/>
+                </div>
+            </div> : 'No results'}
         </main>
     )
 }
