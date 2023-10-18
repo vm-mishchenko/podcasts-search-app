@@ -87,7 +87,6 @@ const extractExactMatch = (searchQuery: string): string | undefined => {
 const searchPipelineBuilder = (searchQuery: string, filters: Filter[]) => {
     // Configure "must" operators
     const must = [];
-
     const exactMatchQuery = extractExactMatch(searchQuery);
     if (exactMatchQuery) {
         const phraseOperator = new PhraseOperator(
@@ -96,20 +95,14 @@ const searchPipelineBuilder = (searchQuery: string, filters: Filter[]) => {
             'title_standard'
         );
         must.push(phraseOperator);
-    } else {
-        const title = new TextOperator(searchQuery, 'title', 3);
-        const derivedSummary = new TextOperator(searchQuery, 'derived_summary', 2);
-        const derivedTranscriptionText = new TextOperator(searchQuery, 'derived_transcription_text');
-        must.push(...[
-            title,
-            derivedSummary,
-            derivedTranscriptionText
-        ]);
     }
 
     // Configure "should" operators
     const oneMonthInMilliseconds = 2592000000;
     const nearOperator = new NearOperator('published_at', new Date(), oneMonthInMilliseconds * 12, 4);
+    const title = new TextOperator(searchQuery, 'title', 3);
+    const derivedSummary = new TextOperator(searchQuery, 'derived_summary', 2);
+    const derivedTranscriptionText = new TextOperator(searchQuery, 'derived_transcription_text');
 
     // Configure filter operators
     const filterSearchOperators = mapFilterToSearchOperator(filters);
@@ -117,9 +110,13 @@ const searchPipelineBuilder = (searchQuery: string, filters: Filter[]) => {
     const compound = new CompoundOperator({
         must,
         should: [
+            title,
+            derivedSummary,
+            derivedTranscriptionText,
             nearOperator
         ],
         filter: filterSearchOperators,
+        minimumShouldMatch: 2
     });
 
     const searchStage: SearchStage = {
@@ -127,7 +124,7 @@ const searchPipelineBuilder = (searchQuery: string, filters: Filter[]) => {
         operator: compound
     };
 
-    const baseSearchPipeline = new BaseSearchPipeline(searchStage, 40, [
+    const baseSearchPipeline = new BaseSearchPipeline(searchStage, 30, [
         'title',
         'published_at',
         'derived_summary',

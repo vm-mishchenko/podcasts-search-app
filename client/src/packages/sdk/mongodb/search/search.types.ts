@@ -168,6 +168,7 @@ export interface CompoundOperatorDefinition {
     mustNot: SearchOperatorDefinitionMap[];
     should: SearchOperatorDefinitionMap[];
     filter: SearchOperatorDefinitionMap[];
+    minimumShouldMatch: number;
 }
 
 export interface CompoundOperatorProps {
@@ -175,6 +176,7 @@ export interface CompoundOperatorProps {
     mustNot?: SearchOperator[];
     should?: SearchOperator[];
     filter?: SearchOperator[];
+    minimumShouldMatch?: number;
 }
 
 export class CompoundOperator implements SearchOperator {
@@ -206,11 +208,13 @@ export class CompoundOperator implements SearchOperator {
                 [searchOperator.type]: searchOperator.toDefinition()
             };
         }) : [];
+        const minimumShouldMatch = this.props.minimumShouldMatch ? this.props.minimumShouldMatch : 0;
         return {
             should,
             must,
             mustNot,
-            filter
+            filter,
+            minimumShouldMatch,
         }
     }
 }
