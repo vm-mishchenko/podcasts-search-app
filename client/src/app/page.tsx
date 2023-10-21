@@ -55,6 +55,7 @@ export default function Home(params: HomeQueryParams) {
     const [searchPipeline, setSearchPipeline] = useState<Document[]>([]);
 
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const clearBtnRef = useRef<HTMLButtonElement>(null);
 
     /**
      * 1. Read URL param set initial state for query, filter, facets, -> run search.
@@ -105,6 +106,7 @@ export default function Home(params: HomeQueryParams) {
 
     // Run search request
     useEffect(() => {
+        clearBtnRef.current?.focus();
         setRequestsInFlight((currentFlights) => {
             return currentFlights + 1;
         });
@@ -121,6 +123,7 @@ export default function Home(params: HomeQueryParams) {
             setFacetResults(response.facetResults);
             setEpisodeSearchResults(response.searchResults);
             setSearchPipeline(response.searchPipeline);
+
         }).catch((error: any) => {
             console.error(error);
         }).finally(() => {
@@ -206,9 +209,12 @@ export default function Home(params: HomeQueryParams) {
                             autoComplete="off"
                             className={styles.searchInput}
                         />
+
                         <LoadingDotComp className={styles.loadingDot} requestsInFlight={requestsInFlight}/>
+
                         {showResetBtn &&
-                            <button type="button" className={styles.resetBtn} onClick={onClearBtnClick}>Clear</button>}
+                            <button type="button" className={styles.resetBtn} onClick={onClearBtnClick}
+                                    ref={clearBtnRef}>Clear</button>}
                     </form>
                 </div>
 
@@ -239,6 +245,7 @@ export default function Home(params: HomeQueryParams) {
                     <span>No results</span>
                 </div>}
             </main>
+
             {searchParams.get('debug') && <div className={styles.debug}>
                 <div>
                     <h4>Inner state</h4>
