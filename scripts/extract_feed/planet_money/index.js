@@ -50,18 +50,18 @@ const assertValue = (value, key) => {
     });
 
     // Schedule all episodes for transcription
-    for (let i = 0; i < episodes.length; i++) {
-        const schedule_audio_transcription_url = `https://whisper-app-b4lxkp5rjq-uc.a.run.app/api/audio`
-        const response = await axios.post(schedule_audio_transcription_url, {
-            url: episodes[i][EPISODE_FIELDS.audioUrl],
-            ADMIN_ACCESS_TOKEN: "PODCASTS_SEARCH_ADMIN_ACCESS_TOKEN"
-        }, {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-        });
-        console.log(`Transcription status for podcast ${i} out of ${episodes.length}: ${response.data.status}`)
-    }
+    // for (let i = 0; i < episodes.length; i++) {
+    //     const schedule_audio_transcription_url = `https://whisper-app-b4lxkp5rjq-uc.a.run.app/api/audio`
+    //     const response = await axios.post(schedule_audio_transcription_url, {
+    //         url: episodes[i][EPISODE_FIELDS.audioUrl],
+    //         ADMIN_ACCESS_TOKEN: "xxx"
+    //     }, {
+    //         headers: {
+    //             "Content-Type": "application/x-www-form-urlencoded"
+    //         },
+    //     });
+    //     console.log(`Transcription status for podcast ${i} out of ${episodes.length}: ${response.data.status}`)
+    // }
 
     fs.writeFileSync('./extracted/231014_planet_money.json', JSON.stringify(episodes));
 })();

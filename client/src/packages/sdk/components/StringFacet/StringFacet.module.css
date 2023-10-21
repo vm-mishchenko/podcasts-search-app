@@ -1,0 +1,43 @@
+.rool {
+    margin-bottom: 32px;
+}
+
+.name {
+    text-transform: uppercase;
+    font-size: 12px;
+    margin: 0 0 16px 0;
+    font-weight: normal;
+}
+
+.list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bucket {
+    margin-bottom: 8px;
+}
+
+.bucketLabel {
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.checkboxWithName {
+    display: flex;
+    align-items: baseline;
+}
+
+.count {
+    color: #525252
+}
+
+.checkbox {
+    margin: 0 4px 0 0;
+}
+
+.bucketName {
+    margin-left: 4px;
+}

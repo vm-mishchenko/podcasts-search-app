@@ -11,7 +11,7 @@ export interface NumberFacet {
     type: FacetType.NUMBER;
     path: string,
     boundaries: number[];
-    default: string;
+    default?: string;
 }
 
 export interface StringFacet {

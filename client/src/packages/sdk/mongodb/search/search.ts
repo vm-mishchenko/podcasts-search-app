@@ -1,44 +1,27 @@
 import {SearchStage, TextOperator, CompoundOperator, SearchPipeline} from "./search.types";
 import {Document} from "mongodb";
+import {BaseStage} from "@/packages/sdk/mongodb/search/base-stage.types";
 
 /**
  * One of the template for a pipeline. I could create more if necessary.
  */
 export class BaseSearchPipeline implements SearchPipeline {
     stage: SearchStage;
-    limit: number;
-    project: string[];
 
-    constructor(stage: SearchStage, limit: number = 10, project: string[] = ['_id']) {
+    constructor(stage: SearchStage, public limitStage: BaseStage, public matchStage: BaseStage, public projectStage: BaseStage) {
         this.stage = stage;
-        this.limit = limit;
-        this.project = project;
     }
 
     getPipeline(): Document[] {
-        // Search stage
         const searchStage = {
             $search: this.getSearchStage()
         };
 
-        // Limit stage
-        const limitStage = {
-            $limit: this.limit
-        };
-
-        // Project stage
-        const projectFields = this.project.reduce((result, path) => {
-            result[path] = 1;
-            return result;
-        }, {} as Record<string, number>);
-        const projectStage = {
-            $project: projectFields
-        };
-
         return [
             searchStage,
-            limitStage,
-            projectStage
+            this.matchStage.toDefinition(),
+            this.limitStage.toDefinition(),
+            this.projectStage.toDefinition()
         ];
     }
 

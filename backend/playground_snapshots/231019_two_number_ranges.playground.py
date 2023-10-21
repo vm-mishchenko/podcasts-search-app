@@ -1,7 +1,6 @@
 import datetime
 
 from pymongo import MongoClient
-import datetime
 
 from config import MONGODB_CLUSTER, MONGODB_USER, MONGODB_PASSWORD
 
@@ -19,29 +18,14 @@ pipeline = [
     {
         "$search": {
             "compound": {
-                "minimumShouldMatch": 3,
+                "minimumShouldMatch": 2,
                 "should": [
-                    # query string search
                     {
-                        "compound": {
-                            "minimumShouldMatch": 2,
-                            "should": [
-                                {
-                                    "text": {
-                                        "query": "more",
-                                        "path": "title"
-                                    }
-                                },
-                                {
-                                    "text": {
-                                        "query": "more",
-                                        "path": "derived_summary"
-                                    }
-                                },
-                            ]
+                        "text": {
+                            "query": "about",
+                            "path": {"wildcard": "*"}
                         }
                     },
-                    # filter based on 2 ranges with OR condition
                     {
                         "compound": {
                             "minimumShouldMatch": 1,
@@ -62,14 +46,6 @@ pipeline = [
                                 }
                             ]
                         }
-                    },
-                    # boost recent results
-                    {
-                        "near": {
-                            "path": "published_at",
-                            "origin": datetime.datetime.now(),
-                            "pivot": 100
-                        }
                     }
                 ],
             }
@@ -81,10 +57,8 @@ pipeline = [
     {
         "$project": {
             "_id": -1,
-            "title": 1,
-            "published_at": 1,
-            "podcast_id_str": 1,
             "duration_in_sec": 1,
+            "podcast_id_str": 1,
             "score": {
                 "$meta": "searchScore"
             }

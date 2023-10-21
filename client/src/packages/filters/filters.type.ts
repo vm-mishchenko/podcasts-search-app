@@ -15,6 +15,9 @@ export enum FilterType {
  */
 export const filterTypeKeys = Object.keys(FilterType);
 
+/**
+ * Base interface all custom filters should extend from.
+ */
 export interface Filter {
     // Type helps API cast data to a particular interface.
     type: FilterType;

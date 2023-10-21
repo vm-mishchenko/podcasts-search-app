@@ -23,11 +23,17 @@ export const EpisodeSearchResultCard = ({searchQuery, episodeSearchResult}: Epis
         <div className={styles.header}>
             <div>
                 <div className={styles.date}>
-                    {publishedDate.toLocaleDateString("en-US", {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                    })}
+                    <span>
+                        {publishedDate.toLocaleDateString("en-US", {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                        })}
+                    </span>
+                    <span> | </span>
+                    <span>
+                        {Math.ceil(episodeSearchResult.duration_in_sec / 60)} min
+                    </span>
                 </div>
 
                 <a href={`/episodes/${episodeSearchResult._id}`} target="_blank">{episodeSearchResult.title}</a>

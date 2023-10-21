@@ -14,10 +14,10 @@ export const PublishedAtFilterComp = ({value, onChange}: PublishedAtFilterProps)
             onChange(e.target.value as PUBLISHED_AT_OPTIONS);
         }} className={styles.select}>
             <option value={PUBLISHED_AT_OPTIONS.ANY_TIME}>Any time</option>
-            <option value={PUBLISHED_AT_OPTIONS.PAST_WEEK}>Past week</option>
-            <option value={PUBLISHED_AT_OPTIONS.PAST_MONTH}>Past month</option>
-            <option value={PUBLISHED_AT_OPTIONS.PAST_6_MONTH}>Past 6 month</option>
             <option value={PUBLISHED_AT_OPTIONS.PAST_YEAR}>Past year</option>
+            <option value={PUBLISHED_AT_OPTIONS.PAST_6_MONTH}>Past 6 month</option>
+            <option value={PUBLISHED_AT_OPTIONS.PAST_MONTH}>Past month</option>
+            <option value={PUBLISHED_AT_OPTIONS.PAST_WEEK}>Past week</option>
         </select>
     </label>;
 }

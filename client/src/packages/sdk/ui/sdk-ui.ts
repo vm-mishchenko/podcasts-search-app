@@ -24,7 +24,7 @@ export class SearchUI {
     static getFacets(facetDefinitionUIList: FacetDefinitionUI[]) {
         const facets: Facets = {};
         facetDefinitionUIList.forEach((facetDefinitionUI) => {
-            const {name, ...facetDefinition} = facetDefinitionUI;
+            const {name, displayName, ...facetDefinition} = facetDefinitionUI;
             if (name in facets) {
                 throw new Error(`All facet definition must have unique name, found duplicate: ${facetDefinitionUI.name}`);
             }

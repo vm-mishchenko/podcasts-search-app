@@ -41,5 +41,7 @@ export const mapToSearchOperator = (filter: PublishedAtFilter): RangeOperator =>
             throw new Error(`Unsupported PublishedAt filter value: "${filter.value}"`);
     }
 
-    return new RangeOperator('published_at', getNDaysAgo(gtNumberOfDays));
+    return new RangeOperator('published_at', {
+        gte: getNDaysAgo(gtNumberOfDays)
+    });
 }

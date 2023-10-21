@@ -24,7 +24,7 @@ const assertValue = (value, key) => {
             [EPISODE_FIELDS.publishedAt]: (new Date(rawEpisode['pubDate'])).toISOString(),
             [EPISODE_FIELDS.durationInSec]: getDurationInSec(rawEpisode['itunes']['duration']),
         }
-        episodes.push(episode);
+        return episode;
     });
 
     // Schedule all episodes for transcription

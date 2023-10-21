@@ -31,11 +31,13 @@ export type FacetDefinitionUI = NumberFacetUI | StringFacetUI;
 // todo-vm: don't extend - use composition instead
 export interface NumberFacetUI extends NumberFacet {
     name: FacetName;
+    displayName: string;
 }
 
 // String facet definition to build request to MongoDB.
 export interface StringFacetUI extends StringFacet {
     name: FacetName; // Uniquely identifies facet to distinguish between different facets on the same field.
+    displayName: string;
 }
 
 // Server sends FacetResultUI back as response for search request.

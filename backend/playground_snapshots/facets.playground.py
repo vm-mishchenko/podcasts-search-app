@@ -21,6 +21,7 @@ pipeline = [
             "facet": {
                 "operator": {
                     "compound": {
+                        "minimumShouldMatch": 1,
                         "should": [
                             {
                                 "text": {

@@ -4,14 +4,6 @@ const parser = new Parser();
 const {EPISODE_FIELDS, filterRawEpisode, getDurationInSec} = require('../episode.js');
 const axios = require('axios');
 
-const assertValue = (value, key) => {
-    if (!value) {
-        console.error(`"${key}" config key doesn't have a value.`)
-    }
-
-    return value;
-}
-
 (async () => {
     const rawEpisodes = JSON.parse(fs.readFileSync('./raw/231007_practicalai.json'))
     const required_fields = ['guid', 'title', 'enclosure.url', 'link', 'pubDate', 'itunes.duration'];
@@ -19,8 +11,8 @@ const assertValue = (value, key) => {
         return filterRawEpisode(rawEpisode, required_fields);
     }).map(rawEpisode => {
         const episode = {
-            [EPISODE_FIELDS.id]: assertValue(rawEpisode['guid'], 'guid'),
-            [EPISODE_FIELDS.title]: assertValue(rawEpisode['title'], 'title'),
+            [EPISODE_FIELDS.id]: rawEpisode['guid'],
+            [EPISODE_FIELDS.title]: rawEpisode['title'],
             [EPISODE_FIELDS.audioUrl]: rawEpisode['enclosure']['url'],
             [EPISODE_FIELDS.episodeLink]: rawEpisode['link'],
             [EPISODE_FIELDS.publishedAt]: (new Date(rawEpisode['pubDate'])).toISOString(),

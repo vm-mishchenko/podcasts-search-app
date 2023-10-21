@@ -1,6 +1,8 @@
 import {fetchWrapper} from "@/packages/fetch-wrapper/fetch-wrapper";
 import {EpisodeSearchResponse} from "@/pages/api/search/episodes";
 import {Filter} from "@/packages/filters/filters.type";
+import {FacetName, BucketId} from "@/packages/sdk/mongodb/search-meta/search-meta.types";
+import {SelectedFacet} from "@/packages/sdk/ui/sdk-ui-facets";
 
 let currentFetch: any;
 const abortableFetch = (url: string) => {
@@ -13,7 +15,7 @@ const abortableFetch = (url: string) => {
     };
 };
 
-export const searchEpisodes = async (searchQuery: string, filters: Filter[]): Promise<EpisodeSearchResponse> => {
+export const searchEpisodes = async (searchQuery: string, filters: Filter[], selectedFacets: SelectedFacet[]): Promise<EpisodeSearchResponse> => {
     // abort previous in-flight request
     if (!!currentFetch) {
         currentFetch.abort();
@@ -24,6 +26,7 @@ export const searchEpisodes = async (searchQuery: string, filters: Filter[]): Pr
     const searchParams = new URLSearchParams();
     searchParams.append('searchQuery', searchQuery.trim());
     searchParams.append('filters', JSON.stringify(filters));
+    searchParams.append('facets', JSON.stringify(selectedFacets));
     const url = `/api/search/episodes?${searchParams}`;
 
     // fetch data

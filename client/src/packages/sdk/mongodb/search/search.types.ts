@@ -2,6 +2,7 @@
 
 import {Document} from "mongodb";
 import {RangeOperatorDefinition} from "@/packages/sdk/mongodb/search/range.operator";
+import {QueryStringOperator, QueryStringOperatorDefinition} from "@/packages/sdk/mongodb/search/queryString.operator";
 
 export interface SearchPipeline {
     getPipeline(): Document[];
@@ -27,7 +28,8 @@ export type SearchOperatorDefinition =
     | NearOperatorDefinition
     | CompoundOperatorDefinition
     | PhraseOperatorDefinition
-    | RangeOperatorDefinition;
+    | RangeOperatorDefinition
+    | QueryStringOperatorDefinition;
 
 export interface SearchOperatorDefinitionMap extends Record<string, SearchOperatorDefinition> {
 }
@@ -45,7 +47,9 @@ export enum SearchOperatorType {
     // https://www.mongodb.com/docs/atlas/atlas-search/phrase
     PHRASE = "phrase",
     // https://www.mongodb.com/docs/atlas/atlas-search/range/
-    RANGE = "range"
+    RANGE = "range",
+    // https://www.mongodb.com/docs/atlas/atlas-search/queryString/
+    QUERY_STRING = "queryString",
 }
 
 export interface TextOperatorDefinition {
